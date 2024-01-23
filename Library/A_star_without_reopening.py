@@ -27,7 +27,7 @@ def A_star_without_reopening(start, end, obstacle_map):
     # Heuristic function for distance
     # estimates the cost to reach the goal from node a to node b
     def heuristic(node_a, node_b):
-        return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 0.41421356237 * min(abs(node_a[0] - node_b[0]), abs(a[1]-b[1]))
+        return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 0.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
 
     # Function to process a potential neighboring node
     # validates whether the node is within the map boundaries
