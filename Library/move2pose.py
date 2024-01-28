@@ -2,6 +2,8 @@
 def move2pose(R, K):
     '''
     this function implements the Moving to a Pose control law
+    ...
+    this function is called by the kinematicModel function
     '''
 
     # Unpack State Variables
