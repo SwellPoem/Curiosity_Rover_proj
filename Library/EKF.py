@@ -20,7 +20,7 @@ def compute_and_plot_ellipses(q_est, L_est, plt, n_sigma=3, frequency=1):
         ellipse = Ellipse(xy=q_est[i, :2], width=width*n_sigma, height=height*n_sigma, angle=orientation, facecolor='none', edgecolor=color, alpha=0.8)
         plt.gca().add_patch(ellipse)
 
-def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, xLM = [], yLM= []):
+def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, noise_d_arr, noise_theta_arr, noise_r_arr, noise_beta_arr, xLM=[], yLM=[]):
     
     q_est = [q_real[0]]     # initialize the estimated trajectory
     L_est = [L0]            # initialize covariance matrix
@@ -30,7 +30,7 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, x
 
     Hw = np.array([[1, 0], [0, 1]])
     W = np.array([[sigma_r**2, 0], [0, sigma_beta**2]])     # Measurement Covariance Matrix
-
+    
     for i in tqdm(range(1, len(q_real)), desc="Processing"):
 
         #Dead reckoning
@@ -40,16 +40,21 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, x
         delta_theta = q_real[i][2] - q_real[i-1][2]                         # delta in orientation
 
         # Add noise
-        noisy_delta_d = delta_d + np.random.normal(loc=0, scale=sigma_d)
-        noisy_delta_theta = delta_theta + np.random.normal(loc=0, scale=sigma_theta)
+        noise_d = np.random.normal(loc=0, scale=sigma_d)
+        noise_theta = np.random.normal(loc=0, scale=sigma_theta)
 
+        noisy_delta_theta = delta_theta + noise_theta
+
+        noise_d_arr.append(noise_d)
+        noise_theta_arr.append(noise_theta)
+        
         # Retrieve last State and Covariance matrix
         x, y, theta = q_est[-1]
         L = L_est[-1]
 
         # Estimate the new State
-        x_new = x + noisy_delta_d*np.cos(theta)
-        y_new = y + noisy_delta_d*np.sin(theta)
+        x_new = x + delta_d*np.cos(theta) + noise_d
+        y_new = y + delta_d*np.sin(theta) + noise_d
         theta_new = theta + noisy_delta_theta
         q_new = np.array([x_new, y_new, theta_new])
 
@@ -58,18 +63,22 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, x
         Fv = np.array([[np.cos(theta), 0], [np.sin(theta), 0], [0, 1]])   # Jacobian of the noise
         L_new = Fq @ L @ Fq.T + Fv @ V @ Fv.T   # Covariance Matrix of the new State (@ represents matrix multiplication)
 
-
+        # EKF
         # Check for visible Landmarks
         for x_lm, y_lm in zip(xLM, yLM):
-
-            dist_lm = np.linalg.norm([x_lm - x_new, y_lm - y_new])
-
+            # dist_lm = np.linalg.norm([x_lm - x_new, y_lm - y_new])
+            dist_lm = np.sqrt((x_lm - x_new)**2 + (y_lm - y_new)**2)
+            
             if dist_lm < lidar_maxrange:
-              
+                print(dist_lm)
                 # Compute the Observables from the real State -> observables that I should see
-                # z_real = h(q_real[i], x_lm, y_lm) + np.array([np.random.normal(0, sigma_r), np.random.normal(0, sigma_beta)])
-                z_real = h(q_real[i], x_lm, y_lm) + np.array([np.random.normal(loc=0, scale=sigma_r), np.random.normal(loc=0, scale=sigma_beta)])
+                noise_r = np.random.normal(loc=0, scale=sigma_r)
+                noise_beta = np.random.normal(loc=0, scale=sigma_beta)
+                z_real = h(q_real[i], x_lm, y_lm) + np.array([noise_r, noise_beta])
                 z_new = h(q_new, x_lm, y_lm)
+
+                noise_r_arr.append(noise_r)
+                noise_beta_arr.append(noise_beta)
 
                 # Compute Kalman Gain
                 Hq = get_Hq(q_new, (x_lm, y_lm))
@@ -81,15 +90,14 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, x
                 q_upd = K @ innovation
                 q_new = q_new + q_upd
                 L_new = (np.eye(3) - K @ Hq) @ L_new
-
-                # print('\nPerforming EKF @ step {:.0f}:\nq_est = '.format(i), q_new, '\nq_upd = ', q_upd)
                 
+                # print('\nPerforming EKF @ step {:.0f}:\nq_est = '.format(i), q_new, '\nq_upd = ', q_upd)   
 
         # Append the new estimated position and orientation
         q_est.append(q_new)
         L_est.append(L_new)
 
-    return np.array(q_est), L_est
+    return np.array(q_est), L_est, noise_d_arr, noise_theta_arr, noise_r_arr, noise_beta_arr
 
 def h(q, x_lm, y_lm):
     '''

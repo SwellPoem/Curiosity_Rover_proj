@@ -20,7 +20,7 @@ def dead_reckoning(q_real, sigma_d, sigma_theta, L0):
         delta_theta = q_real[i][2] - q_real[i-1][2]                         # delta in orientation
 
         # Add noise
-        noisy_delta_d = delta_d + np.random.normal(loc=0, scale=sigma_d)
+        # noisy_delta_d = delta_d + np.random.normal(loc=0, scale=sigma_d)
         noisy_delta_theta = delta_theta + np.random.normal(loc=0, scale=sigma_theta)
 
         # Retrieve last State and Covariance matrix
@@ -28,8 +28,8 @@ def dead_reckoning(q_real, sigma_d, sigma_theta, L0):
         L = L_est[-1]
 
         # Estimate the new State
-        x_new = x + noisy_delta_d*np.cos(theta)
-        y_new = y + noisy_delta_d*np.sin(theta)
+        x_new = x + delta_d*np.cos(theta) + np.random.normal(loc=0, scale=sigma_d)
+        y_new = y + delta_d*np.sin(theta) + np.random.normal(loc=0, scale=sigma_d)
         theta_new = theta + noisy_delta_theta
         q_new = np.array([x_new, y_new, theta_new])
 
