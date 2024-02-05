@@ -3,7 +3,7 @@ import matplotlib.cm as cm
 from tqdm import tqdm
 from matplotlib.patches import Ellipse
 
-def compute_and_plot_ellipses(q_est, L_est, plt, n_sigma=3, frequency=1):
+def compute_and_plot_ellipses(q_est, L_est, plt, frequency, n_sigma):
     n = int(1 / frequency)  # number of measurements acquisition per second
     cmap = cm.get_cmap('Reds')  # load the colormap
     num_ellipses = len(q_est) // n  # calculate the number of ellipses
@@ -53,8 +53,8 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, n
         L = L_est[-1]
 
         # Estimate the new State
-        x_new = x + delta_d*np.cos(theta) + noise_d
-        y_new = y + delta_d*np.sin(theta) + noise_d
+        x_new = x + (delta_d+noise_d)*np.cos(theta)
+        y_new = y + (delta_d+noise_d)*np.sin(theta)
         theta_new = theta + noisy_delta_theta
         q_new = np.array([x_new, y_new, theta_new])
 
@@ -67,13 +67,12 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, n
         # Check for visible Landmarks
         for x_lm, y_lm in zip(xLM, yLM):
             # dist_lm = np.linalg.norm([x_lm - x_new, y_lm - y_new])
-            dist_lm = np.sqrt((x_lm - x_new)**2 + (y_lm - y_new)**2)
-            
+            dist_lm = np.sqrt((x_lm - q_real[i][0])**2 + (y_lm - q_real[i][1])**2)
+            noise_r = np.random.normal(loc=0, scale=sigma_r)
+            noise_beta = np.random.normal(loc=0, scale=sigma_beta)
             if dist_lm < lidar_maxrange:
-                print(dist_lm)
+                # print(dist_lm)
                 # Compute the Observables from the real State -> observables that I should see
-                noise_r = np.random.normal(loc=0, scale=sigma_r)
-                noise_beta = np.random.normal(loc=0, scale=sigma_beta)
                 z_real = h(q_real[i], x_lm, y_lm) + np.array([noise_r, noise_beta])
                 z_new = h(q_new, x_lm, y_lm)
 
@@ -89,9 +88,7 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, n
                 innovation = z_real - z_new
                 q_upd = K @ innovation
                 q_new = q_new + q_upd
-                L_new = (np.eye(3) - K @ Hq) @ L_new
-                
-                # print('\nPerforming EKF @ step {:.0f}:\nq_est = '.format(i), q_new, '\nq_upd = ', q_upd)   
+                L_new = (np.eye(3) - K @ Hq) @ L_new   
 
         # Append the new estimated position and orientation
         q_est.append(q_new)
@@ -104,8 +101,8 @@ def h(q, x_lm, y_lm):
     this function computes the observables from the state variable and the landmark position.
     '''
 
-    range = np.linalg.norm([x_lm - q[0], y_lm - q[1]])
-    bearing_angle = np.arctan2(y_lm - q[1], x_lm - q[0]) - q[2]
+    range = np.linalg.norm([q[0] - x_lm, q[1] - y_lm])
+    bearing_angle = np.arctan2(y_lm - q[1], x_lm- q[0]) - q[2]
 
     return np.array([range, float(np.squeeze(bearing_angle))])
 
@@ -125,6 +122,7 @@ def get_Hq(q, lm):
     delta_y = ylm - y
     range_sq = delta_x**2 + delta_y**2
     range = np.sqrt(range_sq)
+    # range = np.linalg.norm([delta_x, delta_y])
 
     # Derivatives of range
     dr_dx = -delta_x / range

@@ -20,7 +20,7 @@ def dead_reckoning(q_real, sigma_d, sigma_theta, L0):
         delta_theta = q_real[i][2] - q_real[i-1][2]                         # delta in orientation
 
         # Add noise
-        # noisy_delta_d = delta_d + np.random.normal(loc=0, scale=sigma_d)
+        noisy_delta_d = delta_d + np.random.normal(loc=0, scale=sigma_d)
         noisy_delta_theta = delta_theta + np.random.normal(loc=0, scale=sigma_theta)
 
         # Retrieve last State and Covariance matrix
@@ -28,8 +28,8 @@ def dead_reckoning(q_real, sigma_d, sigma_theta, L0):
         L = L_est[-1]
 
         # Estimate the new State
-        x_new = x + delta_d*np.cos(theta) + np.random.normal(loc=0, scale=sigma_d)
-        y_new = y + delta_d*np.sin(theta) + np.random.normal(loc=0, scale=sigma_d)
+        x_new = x + noisy_delta_d*np.cos(theta) 
+        y_new = y + noisy_delta_d*np.sin(theta)
         theta_new = theta + noisy_delta_theta
         q_new = np.array([x_new, y_new, theta_new])
 
@@ -44,7 +44,7 @@ def dead_reckoning(q_real, sigma_d, sigma_theta, L0):
 
     return np.array(q_est), L_est
 
-def compute_and_plot_ellipses(q_est, L_est, plt, n_sigma=3, frequency=1):
+def compute_and_plot_ellipses(q_est, L_est, plt, frequency, n_sigma):
     n = int(1 / frequency)  # number of measurements acquisition per second
     cmap = cm.get_cmap('Reds')  # load the colormap
     num_ellipses = len(q_est) // n  # calculate the number of ellipses
@@ -59,5 +59,5 @@ def compute_and_plot_ellipses(q_est, L_est, plt, n_sigma=3, frequency=1):
         # Get a color from the colormap
         color = cmap(i / num_ellipses)
         # Plot the ellipse
-        ellipse = Ellipse(xy=q_est[i, :2], width=width*n_sigma, height=height*n_sigma, angle=orientation, facecolor='none', edgecolor=color, alpha=0.9)
+        ellipse = Ellipse(xy=q_est[i, :2], width=width*n_sigma, height=height*n_sigma, angle=orientation, facecolor='none', edgecolor=color, alpha=0.6)
         plt.gca().add_patch(ellipse)

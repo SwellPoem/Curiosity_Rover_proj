@@ -27,8 +27,8 @@ def A_star_without_reopening(start, end, obstacle_map):
     # Heuristic function for distance
     # estimates the cost to reach the goal from node a to node b
     def heuristic(node_a, node_b):
-        return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 1.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
-        # return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 0.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
+        # return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 1.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
+        return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 0.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
 
     # Function to process a potential neighboring node
     # validates whether the node is within the map boundaries
@@ -49,9 +49,15 @@ def A_star_without_reopening(start, end, obstacle_map):
             # Check if the neighbor is in the closed list
             if neighbor in closed_list_set:
                 return None, False
+            
+            # Determine movement cost -> straight: 1, diagonal: sqrt(2)
+            if x != next_node[0] and y != next_node[1]:
+                movement_cost = 1.41421356237
+            else:
+                movement_cost = 1
 
             # Create the f, g, and h values
-            neighbor.g = current_node.g + 1
+            neighbor.g = current_node.g + movement_cost
             neighbor.h = heuristic(neighbor.position, end_node.position)
             neighbor.f = neighbor.g + neighbor.h
 
