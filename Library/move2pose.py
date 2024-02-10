@@ -1,5 +1,5 @@
 
-def move2pose(R, K):
+def move2pose(state, K):
     '''
     this function implements the Moving to a Pose control law
     ...
@@ -7,9 +7,9 @@ def move2pose(R, K):
     '''
 
     # Unpack State Variables
-    rho = R[0]
-    alpha = R[1]
-    beta = R[2]
+    rho = state[0]
+    alpha = state[1]
+    beta = state[2]
 
     # Define Gains
     Krho = K[0]

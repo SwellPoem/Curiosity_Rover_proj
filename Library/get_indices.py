@@ -10,6 +10,7 @@ def get_indices(point, X, Y, mapRes):
     return np.array([i, j])
 
 def get_point(indices, X, Y, mapRes):
+    
     # Compute point
     x = X[0, 0] + (indices[1] + 1) * mapRes - mapRes
     y = Y[0, 0] - (indices[0] + 1) * mapRes + mapRes

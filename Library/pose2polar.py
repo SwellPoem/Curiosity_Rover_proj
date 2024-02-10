@@ -4,7 +4,6 @@ def pose2polar(P_a, P_b):
     '''
     this function converts the pose state variables [x, y, theta] 
     to the polar state variables [rho, alpha, beta] 
-    wrt a reference pose.
     '''
 
     if len(P_a.shape) == 1:

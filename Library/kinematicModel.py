@@ -1,18 +1,18 @@
 import numpy as np
 from Library.move2pose import move2pose
 
-def kinematicModel(t, S, K):
+def kinematicModel(t, state, K):
     '''
     S contains the polar state variables [rho, alpha, beta].
     '''
 
     # Unpack State Variables
-    rho = S[0]
-    alpha = S[1]
-    beta = S[2]
+    rho = state[0]
+    alpha = state[1]
+    beta = state[2]
 
     # Compute Control
-    v, omega = move2pose(S, K)
+    v, omega = move2pose(state, K)
 
     # Compute Derivatives
     drho = -np.cos(alpha) * v

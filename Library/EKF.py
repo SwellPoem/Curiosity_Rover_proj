@@ -66,13 +66,15 @@ def EKF(q_real, sigma_d, sigma_theta, L0, lidar_maxrange, sigma_r, sigma_beta, n
         # EKF
         # Check for visible Landmarks
         for x_lm, y_lm in zip(xLM, yLM):
-            # dist_lm = np.linalg.norm([x_lm - x_new, y_lm - y_new])
+
             dist_lm = np.sqrt((x_lm - q_real[i][0])**2 + (y_lm - q_real[i][1])**2)
+
             noise_r = np.random.normal(loc=0, scale=sigma_r)
             noise_beta = np.random.normal(loc=0, scale=sigma_beta)
+
             if dist_lm < lidar_maxrange:
                 # print(dist_lm)
-                # Compute the Observables from the real State -> observables that I should see
+                # Compute the Observables from the real State
                 z_real = h(q_real[i], x_lm, y_lm) + np.array([noise_r, noise_beta])
                 z_new = h(q_new, x_lm, y_lm)
 

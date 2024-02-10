@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor   #To create a pool of threads to execute calls asynchronously
-from tqdm import tqdm  #library for displaying progress bars in loops
+from tqdm import tqdm  #library for displaying progress bars in loop
+import concurrent.futures   # Use a list to store futures
 
 def A_star_without_reopening(start, end, obstacle_map):
     '''
@@ -27,7 +28,6 @@ def A_star_without_reopening(start, end, obstacle_map):
     # Heuristic function for distance
     # estimates the cost to reach the goal from node a to node b
     def heuristic(node_a, node_b):
-        # return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 1.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
         return max(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1])) + 0.41421356237 * min(abs(node_a[0] - node_b[0]), abs(node_a[1] - node_b[1]))
 
     # Function to process a potential neighboring node
@@ -97,9 +97,6 @@ def A_star_without_reopening(start, end, obstacle_map):
         (x, y) = current_node.position
         neighbors = [(x, y-1), (x-1, y-1), (x-1, y), (x-1, y+1), (x, y+1), (x+1, y+1), (x+1, y), (x+1, y-1)]
 
-        # Use a list to store futures
-        import concurrent.futures
-
         futures = []
 
         for next_node in neighbors:
@@ -112,7 +109,6 @@ def A_star_without_reopening(start, end, obstacle_map):
             if should_add:
                 open_list.append(neighbor)
 
-    
     
     pbar.close()  # Close progress bar
 
