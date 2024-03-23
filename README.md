@@ -1,4 +1,4 @@
-## Rover_homework
+## Motion planning for Curiosity Rover
 
 ### Overview
 This project simulates the navigation, path planning, and localization of a Mars Rover, modeled after NASA's Curiosity Rover, within a virtual representation of Gale Crater on Mars. It comprises three main tasks: Navigation, Path Planning using the A* algorithm, and Rover Localization with Dead Reckoning and an Extended Kalman Filter (EKF), combining odometer and LIDAR data for enhanced accuracy.
